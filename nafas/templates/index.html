@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% from "_sky.html" import sky_hero with context %}
+{% block topbar_class %}{% endblock %}
+{% block body_attrs %} style="--sky-ink: {{ sky_for(featured[1].us_aqi if featured and featured[1] else None).ink }}"{% endblock %}
+
+{% block content %}
+{% set city, reading = featured %}
+{% call sky_hero(city, reading, next_hours=next_hours) %}
+  <a class="btn" href="{{ url_for('main.city', slug=city.slug) }}" data-field="details">See {{ city.name }} in detail</a>
+  <form class="js-switch" action="{{ url_for('main.index') }}" method="get">
+    <label class="visually-hidden" for="switch-city">Show another city</label>
+    <select class="btn btn--ghost" id="switch-city" name="city">
+      {% for c, r in rows|sort(attribute='0.name') %}
+      <option value="{{ c.slug }}" {% if c.slug == city.slug %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <noscript><button class="btn btn--ghost" type="submit">Show</button></noscript>
+  </form>
+{% endcall %}
+
+<section class="section" id="cities" aria-labelledby="cities-title">
+  <div class="wrap">
+    <div class="section__head">
+      <h2 id="cities-title">Across Uzbekistan</h2>
+      <p>Fourteen cities, ranked from the worst air to the cleanest. Select a city to see it in the sky above.</p>
+    </div>
+
+    <div class="atlas">
+      <figure class="map" style="margin: 0">
+        <div class="map__scroll" tabindex="0" aria-label="Map, scroll sideways on small screens">
+        <svg viewBox="-10 -10 {{ geo.WIDTH + 20 }} {{ geo.HEIGHT + 20 }}" role="group" aria-label="Map of Uzbekistan with the current air quality index in each city">
+          <defs>
+            <clipPath id="frame"><rect x="-10" y="-10" width="{{ geo.WIDTH + 20 }}" height="{{ geo.HEIGHT + 20 }}" rx="12"/></clipPath>
+          </defs>
+          <g clip-path="url(#frame)">
+            <rect class="backdrop" x="-10" y="-10" width="{{ geo.WIDTH + 20 }}" height="{{ geo.HEIGHT + 20 }}"/>
+            {% for name, d in geo.NEIGHBOURS.items() %}<path class="land-other" d="{{ d }}"/>{% endfor %}
+            <path class="land-uz" d="{{ geo.UZBEKISTAN }}"/>
+            {% for name, lat, lon in geo.NEIGHBOUR_LABELS %}
+              {% set x, y = geo.project(lat, lon) %}
+              <text class="neighbour-label" x="{{ x }}" y="{{ y }}" text-anchor="middle">{{ name }}</text>
+            {% endfor %}
+          </g>
+          {% for c, r in rows %}
+            {% set x, y = geo.project(c.latitude, c.longitude) %}
+            {% set cat = category_for(r.us_aqi if r else None) %}
+            {% set side = geo.LABEL_SIDE.get(c.slug, 'r') %}
+            <a class="pin {% if c.slug == city.slug %}is-current{% endif %}" href="{{ url_for('main.index', city=c.slug) }}" data-city="{{ c.slug }}"
+               style="--c: {{ cat.color if cat else '#bbb' }}" aria-label="{{ c.name }}: AQI {{ r.us_aqi if r else 'no data' }}{% if cat %}, {{ cat.name }}{% endif %}">
+              <circle class="halo" cx="{{ x }}" cy="{{ y }}" r="22"/>
+              <circle class="core" cx="{{ x }}" cy="{{ y }}" r="15"/>
+              <text class="value" x="{{ x }}" y="{{ y + 0.5 }}" fill="{{ cat.text if cat else '#17323E' }}">{{ r.us_aqi if r else '–' }}</text>
+              {% if side == 'r' %}<text class="name" x="{{ x + 22 }}" y="{{ y + 4.5 }}">{{ c.name }}</text>
+              {% elif side == 'l' %}<text class="name" x="{{ x - 22 }}" y="{{ y + 4.5 }}" text-anchor="end">{{ c.name }}</text>
+              {% elif side == 't' %}<text class="name" x="{{ x }}" y="{{ y - 23 }}" text-anchor="middle">{{ c.name }}</text>
+              {% else %}<text class="name" x="{{ x }}" y="{{ y + 33 }}" text-anchor="middle">{{ c.name }}</text>{% endif %}
+            </a>
+          {% endfor %}
+        </svg>
+        </div>
+        <figcaption class="map__note">Borders: Natural Earth. Numbers show the current US AQI.</figcaption>
+      </figure>
+
+      {% set worst = (rows[0][1].us_aqi if rows and rows[0][1] else 100) %}
+      <ol class="rank">
+        {% for c, r in rows %}
+          {% set cat = category_for(r.us_aqi if r else None) %}
+          <li>
+            <a href="{{ url_for('main.index', city=c.slug) }}" data-city="{{ c.slug }}" {% if c.slug == city.slug %}aria-current="true"{% endif %}>
+              <span class="rank__name">{{ c.name }}<small>{{ c.region }}</small></span>
+              <span class="rank__bar" aria-hidden="true"><i style="width: {{ ((r.us_aqi or 0) / ([worst, 100]|max) * 100)|round(1) }}%; --c: {{ cat.color if cat else '#bbb' }}"></i></span>
+              <span class="rank__aqi">{{ r.us_aqi if r else '–' }}</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+</section>
+
+{% include "_scale.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script type="application/json" id="aqi-data">{{ AQI_JSON|tojson }}</script>
+<script src="{{ url_for('static', filename='js/sky.js') }}"></script>
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+{% endblock %}

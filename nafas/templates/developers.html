@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}API | Nafas{% endblock %}
+{% block content %}
+<div class="wrap">
+  <header class="page-head">
+    <h1>Public API</h1>
+    <p>Every number on this site is available as JSON. No key needed. Responses allow cross-origin requests, so you can call them from a browser.</p>
+  </header>
+  <div class="prose" style="padding-bottom: 80px">
+    <div class="endpoint">
+      <h3><span class="verb">GET</span><code>/api/v1/cities</code></h3>
+      <p>All cities with their current reading.</p>
+    </div>
+    <div class="endpoint">
+      <h3><span class="verb">GET</span><code>/api/v1/cities/&lt;slug&gt;</code></h3>
+      <p>One city and its current reading. Slugs are lowercase city names, such as <code>tashkent</code> or <code>samarkand</code>.</p>
+      <pre class="code">{
+  "slug": "tashkent",
+  "name": "Tashkent",
+  "region": "Tashkent City",
+  "latitude": 41.2995,
+  "longitude": 69.2401,
+  "current": {
+    "time": "2026-10-05T14:00",
+    "us_aqi": 85,
+    "category": "moderate",
+    "category_name": "Moderate",
+    "pm2_5": 28.6,
+    "pm10": 53.9,
+    "nitrogen_dioxide": 20.1,
+    "ozone": 40.4,
+    "sulphur_dioxide": 8.7,
+    "carbon_monoxide": 488.0
+  }
+}</pre>
+    </div>
+    <div class="endpoint">
+      <h3><span class="verb">GET</span><code>/api/v1/cities/&lt;slug&gt;/history?hours=24</code></h3>
+      <p>Hourly readings for the past <code>hours</code> (1 to 744, default 24).</p>
+    </div>
+    <div class="endpoint">
+      <h3><span class="verb">GET</span><code>/api/v1/cities/&lt;slug&gt;/forecast</code></h3>
+      <p>Hourly forecast for the next four days, plus a daily summary with the lowest, highest and average index.</p>
+    </div>
+    <h2>Notes</h2>
+    <ul>
+      <li>Times are local Uzbekistan time (UTC+5), at the start of each hour.</li>
+      <li>Concentrations are in µg/m³.</li>
+      <li>Unknown cities return <code>404</code> with an <code>error</code> message.</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

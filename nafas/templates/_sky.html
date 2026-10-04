@@ -1,0 +1,55 @@
+{# The sky hero. Call with {% call sky_hero(...) %}actions{% endcall %} to add buttons. #}
+{% macro sky_hero(city, reading, next_hours=None, compact=False) %}
+{% set aqi = reading.us_aqi if reading else None %}
+{% set cat = category_for(aqi) %}
+{% set sky = sky_for(aqi) %}
+<section class="sky {% if compact %}sky--compact{% endif %}" id="sky"
+         style="--sky-top: {{ sky.top }}; --sky-horizon: {{ sky.horizon }}; --sky-ink: {{ sky.ink }}; --sun-blur: {{ sky.sun_blur }}px; --haze: {{ sky.haze }};"
+         aria-labelledby="sky-city">
+  <div class="sky__sun"></div>
+  <div class="sky__haze"></div>
+  {% include "_skyline.html" %}
+
+  <div class="wrap sky__body">
+    <div>
+      <p class="sky__lede">Air quality right now in</p>
+      <h1 class="sky__city" id="sky-city" data-field="name">{{ city.name }}</h1>
+      {% if reading %}
+      <div class="sky__reading">
+        <span class="sky__aqi" data-field="aqi" aria-describedby="aqi-label">{{ aqi }}</span>
+        <div class="sky__status">
+          <p class="sky__cat"><span class="dot" data-field="dot" style="color: {{ cat.color }}"></span><span data-field="category">{{ cat.name }}</span></p>
+          <p class="sky__meta" id="aqi-label">US air quality index, <span data-field="updated">updated {{ reading.time|hour }}</span></p>
+        </div>
+      </div>
+      <p class="sky__advice" data-field="advice">{{ cat.advice }}</p>
+      {% else %}
+      <p class="sky__advice">No readings yet. Data arrives within a few minutes of starting the app.</p>
+      {% endif %}
+      {% if caller %}<div class="sky__actions">{{ caller() }}</div>{% endif %}
+    </div>
+
+    {% if reading %}
+    <div>
+      {% if next_hours %}
+      <figure class="next24">
+        <figcaption>Next 24 hours <span>Forecast</span></figcaption>
+        <div class="bars" data-field="bars">
+          {% for r in next_hours %}{% set c = category_for(r.us_aqi) %}<span style="height: {{ [((r.us_aqi or 0) / 200 * 100), 100]|min|round(1) }}%; --c: {{ c.color if c else '#ccc' }}" title="{{ r.time|hour }}: AQI {{ r.us_aqi }}"></span>{% endfor %}
+        </div>
+        <div class="bars__axis" data-field="axis">
+          {% for r in next_hours[::3] %}<span>{{ r.time|hour }}</span>{% endfor %}
+        </div>
+      </figure>
+      {% endif %}
+      <dl class="facts">
+        <div><dt>PM2.5</dt><dd><span data-field="pm2_5">{{ reading.pm2_5|round|int if reading.pm2_5 is not none else '–' }}</span> <small>µg/m³</small></dd></div>
+        <div><dt>PM10</dt><dd><span data-field="pm10">{{ reading.pm10|round|int if reading.pm10 is not none else '–' }}</span> <small>µg/m³</small></dd></div>
+        <div><dt>NO₂</dt><dd><span data-field="nitrogen_dioxide">{{ reading.nitrogen_dioxide|round|int if reading.nitrogen_dioxide is not none else '–' }}</span> <small>µg/m³</small></dd></div>
+        <div><dt>Ozone</dt><dd><span data-field="ozone">{{ reading.ozone|round|int if reading.ozone is not none else '–' }}</span> <small>µg/m³</small></dd></div>
+      </dl>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endmacro %}

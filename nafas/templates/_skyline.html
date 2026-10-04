@@ -1,0 +1,41 @@
+{# A generic Central Asian city skyline: apartment blocks, domes, a minaret
+   and a broadcast tower. Drawn in the sky's ink colour; CSS fades it as haze rises. #}
+<svg class="sky__skyline" viewBox="0 0 1440 150" preserveAspectRatio="xMidYMax slice" aria-hidden="true" fill="currentColor">
+  <rect x="0" y="138" width="1440" height="12"/>
+  <path d="M0 138V112h46v-8h38v34z"/>
+  <path d="M96 138V94h52v44z"/>
+  <path d="M156 138V118h30v-14h40v34z"/>
+  {# dome with drum and finial #}
+  <path d="M236 138v-30h8a34 34 0 0 1 68 0h8v30z"/>
+  <rect x="276" y="62" width="4" height="12"/>
+  <circle cx="278" cy="60" r="3.5"/>
+  <path d="M330 138V100h60v38z"/>
+  <path d="M396 138v-52h44v52z"/>
+  <path d="M446 138V108h34v30z"/>
+  {# minaret #}
+  <path d="M500 138l3-92h-4l2-8h14l2 8h-4l3 92z"/>
+  <path d="M502 38a6 6 0 0 1 12 0z"/>
+  <path d="M528 138v-26h12a26 26 0 0 1 52 0h12v26z"/>
+  <path d="M612 138V90h48v48z"/>
+  <path d="M668 138V104h70v34z"/>
+  <path d="M746 138v-60h40v60z"/>
+  <path d="M794 138v-24h54v24z"/>
+  {# broadcast tower #}
+  <path d="M902 138l-16-0 13-74h6l13 74z"/>
+  <ellipse cx="902" cy="62" rx="11" ry="7"/>
+  <rect x="900.5" y="10" width="3" height="50"/>
+  <ellipse cx="902" cy="44" rx="6" ry="4"/>
+  <path d="M928 138V98h46v40z"/>
+  <path d="M982 138v-46h36v46z"/>
+  <path d="M1026 138v-22h10a30 30 0 0 1 60 0h10v22z"/>
+  <path d="M1112 138V86h58v52z"/>
+  <path d="M1178 138v-30h40v30z"/>
+  <path d="M1226 138v-62h34v62z"/>
+  <path d="M1268 138v-28h10a24 24 0 0 1 48 0h10v28z"/>
+  <path d="M1344 138v-44h40v44z"/>
+  <path d="M1392 138v-24h48v24z"/>
+</svg>
+<svg class="sky__grain" width="100%" height="100%" aria-hidden="true">
+  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0.55  0 0 0 0 0.45  0 0 0 0 0.32  0 0 0 0.55 0"/></filter>
+  <rect width="100%" height="100%" filter="url(#grain)"/>
+</svg>

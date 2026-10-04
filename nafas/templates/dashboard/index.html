@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}My alerts | Nafas{% endblock %}
+{% block content %}
+<div class="wrap">
+  <header class="page-head">
+    <h1>Your alerts, {{ current_user.name }}</h1>
+    <p>We check the air every hour. When a city you watch reaches your alert level, you get one email, then another when it clears.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="watching-title">
+    <h2 id="watching-title">Cities you watch</h2>
+    {% if watched %}
+    <ul class="watch" style="margin-top: 12px">
+      {% for sub, r in watched %}
+        {% set cat = category_for(r.us_aqi if r else None) %}
+        <li>
+          <span class="city">
+            <a href="{{ url_for('main.city', slug=sub.city.slug) }}">{{ sub.city.name }}</a>
+            <small>{% if sub.alerting %}<span class="badge-alerting">Alert sent, waiting for the air to clear</span>{% else %}{{ sub.city.region }}{% endif %}</small>
+          </span>
+          {% if cat %}
+          <span class="chip" style="--c: {{ cat.color }}"><span class="dot"></span><b>{{ r.us_aqi }}</b> {{ cat.name }}</span>
+          {% else %}<span class="chip" style="--c: #ccc">No data</span>{% endif %}
+          <form class="threshold" method="post" action="{{ url_for('dashboard.update', sub_id=sub.id) }}">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <label class="visually-hidden" for="t-{{ sub.id }}">Alert level for {{ sub.city.name }}</label>
+            <select class="select" id="t-{{ sub.id }}" name="threshold">
+              {% for value, text, short in thresholds %}
+              <option value="{{ value }}" {% if value == sub.threshold %}selected{% endif %}>Alert at: {{ short }}</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn--quiet" type="submit">Save</button>
+          </form>
+          <form method="post" action="{{ url_for('dashboard.stop', sub_id=sub.id) }}">
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <button class="btn btn--quiet" type="submit">Stop watching</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty" style="margin-top: 10px">
+      <strong>You're not watching any cities yet.</strong>
+      Pick a city below and choose when you want an email.
+    </div>
+    {% endif %}
+  </section>
+
+  {% if available %}
+  <section class="panel" style="margin-top: 24px" aria-labelledby="add-title">
+    <h2 id="add-title">Watch another city</h2>
+    <form class="add-form" method="post" action="{{ url_for('dashboard.watch') }}" style="margin-top: 16px">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="add-city">City</label>
+        <select id="add-city" name="city">
+          {% for c in available %}<option value="{{ c.slug }}">{{ c.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="add-threshold">Email me when the air is</label>
+        <select id="add-threshold" name="threshold">
+          {% for value, text, short in thresholds %}<option value="{{ value }}" {% if value == 101 %}selected{% endif %}>{{ text }}</option>{% endfor %}
+        </select>
+      </div>
+      <button class="btn" type="submit">Watch city</button>
+    </form>
+  </section>
+  {% endif %}
+
+  <section class="panel" style="margin: 24px 0 72px" aria-labelledby="history-title">
+    <h2 id="history-title">Recent emails</h2>
+    {% if history %}
+    <ul class="log" style="margin-top: 10px">
+      {% for a in history %}
+      <li>
+        <span>{% if a.kind == 'alert' %}Alert for {{ a.subscription.city.name }}: AQI reached {{ a.us_aqi }}{% else %}All clear for {{ a.subscription.city.name }}: AQI back to {{ a.us_aqi }}{% endif %}</span>
+        <time datetime="{{ a.sent_at.isoformat() }}Z">{{ (a.sent_at|local).strftime('%d %b, %H:%M') }}</time>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty" style="margin-top: 8px">No emails yet. They'll appear here once one of your cities crosses its alert level.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% from "_sky.html" import sky_hero with context %}
+{% block title %}{{ city.name }}: air quality{% if reading %} {{ reading.us_aqi }}{% endif %} | Nafas{% endblock %}
+{% block topbar_class %}{% endblock %}
+{% block body_attrs %} style="--sky-ink: {{ sky_for(reading.us_aqi if reading else None).ink }}"{% endblock %}
+
+{% block content %}
+{% call sky_hero(city, reading, next_hours=next_hours, compact=True) %}
+  {% if current_user.is_authenticated %}
+    {% if city.id in current_user.subscriptions|map(attribute='city_id')|list %}
+      <a class="btn" href="{{ url_for('dashboard.index') }}">You're watching {{ city.name }}</a>
+    {% else %}
+    <form method="post" action="{{ url_for('dashboard.watch') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <input type="hidden" name="city" value="{{ city.slug }}">
+      <input type="hidden" name="threshold" value="101">
+      <input type="hidden" name="back" value="{{ url_for('main.city', slug=city.slug) }}">
+      <button class="btn" type="submit">Email me when the air gets bad</button>
+    </form>
+    {% endif %}
+  {% else %}
+    <a class="btn" href="{{ url_for('auth.register') }}">Email me when the air gets bad</a>
+  {% endif %}
+  <a class="btn btn--ghost" href="{{ url_for('main.index', city=city.slug) }}">Compare with other cities</a>
+{% endcall %}
+
+<section class="section">
+  <div class="wrap">
+    <div class="panel">
+      <div class="panel__head">
+        <div>
+          <h2>Past readings</h2>
+          <p class="panel__sub">Hourly air quality index in {{ city.name }}</p>
+        </div>
+        <div class="tabs" role="group" aria-label="Time range">
+          <button type="button" data-hours="24" aria-pressed="false">24 hours</button>
+          <button type="button" data-hours="168" aria-pressed="true">7 days</button>
+          <button type="button" data-hours="720" aria-pressed="false">30 days</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="history-chart" aria-label="Line chart of air quality over time" role="img"></canvas></div>
+      <p class="chart-summary" id="chart-summary" aria-live="polite"></p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap two-col">
+    <div class="panel">
+      <h2>Coming days</h2>
+      <p class="panel__sub">Forecast range of the index for each day</p>
+      {% if days %}
+      <ul class="days" style="margin-top: 14px">
+        {% for d in days %}
+          {% set c1, c2 = category_for(d.min), category_for(d.max) %}
+          <li>
+            <span class="day">{% if d.date == today %}Today{% elif d.date == tomorrow %}Tomorrow{% else %}{{ d.date|weekday }}{% endif %}<small>{{ d.date.day }} {{ d.date.strftime('%B') }}</small></span>
+            <span class="track" aria-hidden="true"><i style="left: {{ [d.min / 2, 100]|min }}%; right: {{ [100 - d.max / 2, 0]|max }}%; --c1: {{ c1.color }}; --c2: {{ c2.color }}"></i></span>
+            <span class="range">{{ d.min }}–{{ d.max }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">No forecast available yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <h2>What's in the air</h2>
+      <p class="panel__sub">Concentrations right now</p>
+      <table class="pollutants" style="margin-top: 8px">
+        <tbody>
+        {% for col, name, short, desc in pollutants %}
+          {% set v = reading[col] if reading else None %}
+          <tr>
+            <th scope="row">{{ name }}<small>{{ short }}</small></th>
+            <td class="value">{{ v|round|int if v is not none else '–' }} <small>µg/m³</small></td>
+            <td class="desc">{{ desc }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="application/json" id="aqi-data">{{ AQI_JSON|tojson }}</script>
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sky.js') }}"></script>
+<script>window.NAFAS_CITY = {{ city.slug|tojson }};</script>
+<script src="{{ url_for('static', filename='js/city.js') }}"></script>
+{% endblock %}

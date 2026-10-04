@@ -1,0 +1,23 @@
+<section class="section" aria-labelledby="scale-title">
+  <div class="wrap">
+    <div class="section__head">
+      <h2 id="scale-title">What the numbers mean</h2>
+      <p>The air quality index turns several pollutants into one number from 0 to 500. Higher means dirtier air.</p>
+    </div>
+    <div class="scale__band" aria-hidden="true">
+      {% for c in AQI_CATEGORIES %}<span style="--c: {{ c.color }}; flex: {{ [c.high - c.low + 1, 100]|min }}"></span>{% endfor %}
+    </div>
+    <div class="scale__ticks" aria-hidden="true">
+      {% for c in AQI_CATEGORIES %}<span style="--w: {{ [c.high - c.low + 1, 100]|min }}">{{ c.low }}</span>{% endfor %}
+    </div>
+    <ul class="scale__list">
+      {% for c in AQI_CATEGORIES %}
+      <li style="--c: {{ c.color }}">
+        <h3>{{ c.name }}</h3>
+        <p class="range">{{ c.low }} to {{ c.high }}{% if loop.last %}+{% endif %}</p>
+        <p>{{ c.advice }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>

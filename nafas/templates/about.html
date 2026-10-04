@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}About | Nafas{% endblock %}
+{% block content %}
+<div class="wrap">
+  <header class="page-head">
+    <h1>About Nafas</h1>
+    <p>Nafas means "breath" in Uzbek. It shows how clean the air is across Uzbekistan, hour by hour, and warns you when it isn't.</p>
+  </header>
+  <div class="prose" style="padding-bottom: 24px">
+    <h2>Where the data comes from</h2>
+    <p>Readings come from the Copernicus Atmosphere Monitoring Service (CAMS), the European Union's air-quality model, through the free <a href="https://open-meteo.com/en/docs/air-quality-api">Open-Meteo API</a>. Few cities in Uzbekistan have public ground monitoring stations, so a model is the only way to cover every region evenly. Model estimates are good at showing trends and bad days, but they can differ from a sensor on a specific street.</p>
+    <p>Nafas fetches fresh data every hour, keeps a month of history, and stores up to four days of forecast.</p>
+
+    <h2>How the index works</h2>
+    <p>The US air quality index (AQI) converts pollutant concentrations into a single 0 to 500 scale. Each pollutant gets its own score, and the overall index is the worst of them. In Uzbekistan that's usually fine particles (PM2.5) from traffic and heating, or coarse dust (PM10) during dust storms in the west.</p>
+
+    <h2>How alerts work</h2>
+    <p>Choose a city and an alert level. When the index reaches it, you get one email. You won't get another for the same episode, even if it stays bad for days. Once the index drops clearly below your level, we send an all-clear. The small gap before the all-clear stops the index from triggering emails every hour when it hovers around the line.</p>
+  </div>
+</div>
+{% include "_scale.html" %}
+{% endblock %}
